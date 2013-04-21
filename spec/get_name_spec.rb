@@ -1,5 +1,3 @@
-require File.expand_path('../../../spec_helper', __FILE__)
-
 describe "Resolv#getname" do
   before(:all) do
     require 'resolv'
