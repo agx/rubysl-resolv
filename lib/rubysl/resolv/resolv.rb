@@ -480,6 +480,7 @@ class Resolv
     # * Resolv::DNS::Resource::IN::NS
     # * Resolv::DNS::Resource::IN::PTR
     # * Resolv::DNS::Resource::IN::SOA
+    # * Resolv::DNS::Resource::IN::SSHFP
     # * Resolv::DNS::Resource::IN::TXT
     # * Resolv::DNS::Resource::IN::WKS
     #
@@ -1974,6 +1975,49 @@ class Resolv
       end
 
       ##
+      # SSH Fingerprint
+
+      class SSHFP < Resource
+        TypeValue = 44 # :nodoc:
+
+        def initialize(algorithm, type, fingerprint)
+          @algorithm = algorithm
+          @type = type
+          @fingerprint = fingerprint
+        end
+
+        ##
+        # Algorithm number for this resource.
+
+        attr_reader :algorithm
+
+        ##
+        # Key type number for this resource.
+
+        attr_reader :type
+
+        ##
+        # Key fingerprint for this resource as hex string.
+
+        attr_reader :fingerprint
+
+        def encode_rdata(msg) # :nodoc:
+          msg.put_pack('CC', @algorithm, @type)
+          msg.put_bytes([@fingerprint].pack('H*'))
+        end
+
+        def self.decode_rdata(msg) # :nodoc:
+          algorithm, type = msg.get_unpack('CC')
+          fingerprint = msg.get_bytes.unpack('H*')[0]
+          return self.new(algorithm, type, fingerprint)
+        end
+
+        def to_s # :nodoc:
+          return "#{@algorithm} #{@type} #{@fingerprint}"
+        end
+      end
+
+      ##
       # Unstructured text resource.
 
       class TXT < Resource
@@ -2105,7 +2149,7 @@ class Resolv
       end
 
       ClassInsensitiveTypes = [ # :nodoc:
-        NS, CNAME, SOA, PTR, HINFO, MINFO, MX, TXT, LOC, ANY
+        NS, CNAME, SOA, PTR, HINFO, MINFO, MX, SSHFP, TXT, LOC, ANY
       ]
 
       ##
